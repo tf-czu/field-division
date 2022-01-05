@@ -97,23 +97,6 @@ def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = 
 
     # bounding rectangle and draw traffic lines/rectangle
     x, y, w, h = cv.boundingRect(plot_cnt2)
-    # print(x, y, w, h)
-
-    # # Ignore separate traffic lines
-    # # First extend rectangle to headlands
-    # traffic_rec = cv.rectangle(background.copy(), (x, y), (x+w - 1, y+h - 1), (255), -1)
-    # # Limit the traffic rectangle to plot only
-    # # traffic_pattern = np.logical_and(traffic_rec, plot_no_edges).astype(np.uint8)
-    # # extend the pattern to headlands
-    # dist = 1 + 2 * int(round(num_ride_around * working_width / g_px_size))
-    # dilate_element = np.ones((1, dist))
-    # while True:
-    #     extend_pattern = cv.dilate(traffic_pattern,dilate_element)
-    #     new_traffic_pattern = np.logical_and(extend_pattern, whole_plot).astype(np.uint8)
-    #     if np.array_equal(new_traffic_pattern, traffic_pattern):
-    #         break
-    #     else:
-    #         traffic_pattern = new_traffic_pattern
 
     # Work with each traffic lines
     # First number of traffic lines
