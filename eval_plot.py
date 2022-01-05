@@ -32,6 +32,16 @@ def rotate_cnt(center, cnt, angle):
     return ret.astype(np.int32)
 
 
+def extend_traffic_pattern_v1(traffic_pattern, working_width_px, num_ride_around):
+    # Extend the pattern in x-axes
+    dilate_element = np.ones((1, 2 * num_ride_around * working_width_px + 1))
+    return cv.dilate(traffic_pattern, dilate_element)
+
+
+def extend_traffic_pattern_v2():
+    pass
+
+
 def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = False):
     if np.min(plot_cnt) < 1:  # too close to edge
         plot_cnt = plot_cnt + 1
@@ -113,16 +123,12 @@ def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = 
         traffic_line = np.logical_and(strip, plot_in_strip).astype(np.uint8)
         traffic_pattern[yl_1:yl_2, :] = traffic_line
 
-    # Extend the pattern in x-axes
-    dilate_element = np.ones((1, 2*num_ride_around*working_width_px + 1))
-    traffic_pattern = cv.dilate(traffic_pattern,dilate_element)
-
+    traffic_pattern = extend_traffic_pattern_v1(traffic_pattern, working_width_px, num_ride_around)
     # Cut the result
-    #headlands = np.logical_and(np.logical_and(whole_plot, np.logical_not(plot_no_edges)), traffic_pattern)
+    # headlands = np.logical_and(np.logical_and(whole_plot, np.logical_not(plot_no_edges)), traffic_pattern)
     headlands = np.logical_and(traffic_pattern, np.logical_not(plot_no_edges))
     headlands_area = np.count_nonzero(headlands)
-    headlands_num = headlands_area/plot_area * 100  # %
-    print("Headlands_num: %0.3f" % headlands_num)
+    headlands_num = headlands_area / plot_area * 100  # %
 
     if debug:
         fig_plot = np.ones((size, size, 3), dtype=np.uint8)*255
@@ -153,4 +159,5 @@ if __name__ == "__main__":
     debug = args.debug
 
     plot = read_plot_shape(plot_file)
-    eval_plot_shape(plot, working_width=working_width, debug=debug)
+    headlands_num = eval_plot_shape(plot, working_width=working_width, debug=debug)
+    print("Headlands_num: %0.3f" % headlands_num)
