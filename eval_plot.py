@@ -35,7 +35,6 @@ def rotate_cnt(center, cnt, angle):
 def extend_traffic_pattern_v1(traffic_pattern, working_width_px, num_ride_around):
     # Extend the pattern in x-axes
     dilate_element = np.ones((1, 2 * num_ride_around * working_width_px + 1))
-    print(dilate_element.shape)
     return cv.dilate(traffic_pattern, dilate_element)
 
 
@@ -49,6 +48,14 @@ def extend_traffic_pattern_v2(traffic_pattern, plot_no_edges, whole_plot):
             return traffic_pattern
         else:
             traffic_pattern = new_traffic_pattern
+
+
+def extend_traffic_pattern_v3(traffic_pattern, working_width_px, num_ride_around, whole_plot):
+    # Extend the pattern in x-axes
+    dilate_element = np.ones((1, 4 * num_ride_around * working_width_px + 1))
+    traffic_pattern = cv.dilate(traffic_pattern, dilate_element)
+    return np.logical_and(traffic_pattern, whole_plot).astype(np.uint8)
+
 
 def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = False):
     if np.min(plot_cnt) < 1:  # too close to edge
@@ -68,7 +75,8 @@ def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = 
 
     # bounding rectangle with minimum area
     (cx, cy), (w, h), angle = cv.minAreaRect(plot_cnt2)
-    print(cx, cy, w, h, angle)
+    if debug:
+        print(cx, cy, w, h, angle)
     angle = - angle  # https://theailearner.com/tag/cv2-minarearect/
     if h > w:
         angle = angle + 90
@@ -133,6 +141,8 @@ def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = 
 
     traffic_pattern = extend_traffic_pattern_v1(traffic_pattern, working_width_px, num_ride_around)
     # traffic_pattern = extend_traffic_pattern_v2(traffic_pattern, plot_no_edges, whole_plot)
+    # traffic_pattern = extend_traffic_pattern_v3(traffic_pattern, working_width_px, num_ride_around, whole_plot)
+
     # Cut the result
     # headlands = np.logical_and(np.logical_and(whole_plot, np.logical_not(plot_no_edges)), traffic_pattern)
     headlands = np.logical_and(traffic_pattern, np.logical_not(plot_no_edges))
