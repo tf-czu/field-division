@@ -35,12 +35,20 @@ def rotate_cnt(center, cnt, angle):
 def extend_traffic_pattern_v1(traffic_pattern, working_width_px, num_ride_around):
     # Extend the pattern in x-axes
     dilate_element = np.ones((1, 2 * num_ride_around * working_width_px + 1))
+    print(dilate_element.shape)
     return cv.dilate(traffic_pattern, dilate_element)
 
 
-def extend_traffic_pattern_v2():
-    pass
-
+def extend_traffic_pattern_v2(traffic_pattern, plot_no_edges, whole_plot):
+    traffic_pattern = np.logical_and(traffic_pattern, plot_no_edges).astype(np.uint8)
+    dilate_element = np.ones((1, 10 + 1))
+    while True:
+        extend_pattern = cv.dilate(traffic_pattern,dilate_element)
+        new_traffic_pattern = np.logical_and(extend_pattern, whole_plot).astype(np.uint8)
+        if np.array_equal(new_traffic_pattern, traffic_pattern):
+            return traffic_pattern
+        else:
+            traffic_pattern = new_traffic_pattern
 
 def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = False):
     if np.min(plot_cnt) < 1:  # too close to edge
@@ -102,7 +110,7 @@ def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = 
     # Work with each traffic lines
     # First number of traffic lines
     working_width_px = int(round(working_width/g_px_size))
-    num_traffic_lines = int(h//(working_width_px) + 1)
+    num_traffic_lines = int(h//(working_width_px) + (1 if h%working_width_px else 0))
     if debug:
         print("num_traffic_lines", num_traffic_lines)
     # Empty traffic pattern
@@ -118,12 +126,13 @@ def eval_plot_shape(plot_cnt, working_width = 4.0, num_ride_around = 2, debug = 
         plot_no_edges_strip = plot_no_edges[yl_1:yl_2, :]
         plot_in_strip = np.any(plot_no_edges_strip, axis=0)
         if debug:
-            debug_lines[yl_1 + working_width_px//2, :] = plot_in_strip
-            debug_lines[yl_1 + working_width_px//2 + 1, :] = plot_in_strip  # more distinctive lines
+            debug_lines[yl_1 + working_width_px//2 - 1, :] = plot_in_strip
+            debug_lines[yl_1 + working_width_px//2, :] = plot_in_strip  # more distinctive lines
         traffic_line = np.logical_and(strip, plot_in_strip).astype(np.uint8)
         traffic_pattern[yl_1:yl_2, :] = traffic_line
 
     traffic_pattern = extend_traffic_pattern_v1(traffic_pattern, working_width_px, num_ride_around)
+    # traffic_pattern = extend_traffic_pattern_v2(traffic_pattern, plot_no_edges, whole_plot)
     # Cut the result
     # headlands = np.logical_and(np.logical_and(whole_plot, np.logical_not(plot_no_edges)), traffic_pattern)
     headlands = np.logical_and(traffic_pattern, np.logical_not(plot_no_edges))
